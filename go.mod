@@ -1,4 +1,4 @@
-module github/wskyxm/srm
+module github.com/wskyxm/srm
 
 go 1.16
 

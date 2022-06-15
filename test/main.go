@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github/wskyxm/srm"
+	"github.com/wskyxm/srm"
 	"io/ioutil"
 	"net/http"
 	"time"
