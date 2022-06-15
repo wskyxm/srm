@@ -30,7 +30,6 @@ func main() {
 		srm.Run(srm.SRMConfig{
 			ListenAddr: ":10008",
 			ReportAddr: "http://192.168.9.43:20008/test",
-			UpdateInterval: 10,
 			ReportInterval: 10,
 			Callback: callback,
 		})
