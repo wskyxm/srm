@@ -2,10 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/wskyxm/srm"
 	"io/ioutil"
 	"net/http"
-	"time"
 )
 
 type CustomData struct {
@@ -25,15 +23,15 @@ func report(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	go func() {
-		time.Sleep(time.Second * 3)
-		srm.Run(srm.SRMConfig{
-			ListenAddr: ":10008",
-			ReportAddr: "http://192.168.9.43:20008/test",
-			ReportInterval: 10,
-			Callback: callback,
-		})
-	}()
+	//go func() {
+	//	time.Sleep(time.Second * 3)
+	//	srm.Run(srm.SRMConfig{
+	//		ListenAddr: ":10008",
+	//		ReportAddr: "http://192.168.9.43:20008/test",
+	//		ReportInterval: 10,
+	//		Callback: callback,
+	//	})
+	//}()
 
 	mux := http.ServeMux{}
 	mux.HandleFunc("/test", report)

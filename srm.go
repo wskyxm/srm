@@ -9,21 +9,32 @@ import (
 type SRMConfig struct {
 	ListenAddr		string
 	ReportAddr		string
+	ReportInterval	int64
+}
+
+type srmconfig struct {
+	ListenAddr		string
+	ReportAddr		string
 	Callback		func()interface{}
 	ReportInterval	int64
 }
 
 type systemResourceMonitor struct {
-	cfg SRMConfig
+	cfg srmconfig
 }
 
-func Run(config SRMConfig) {
+func Run(config SRMConfig, callback func()interface{}) {
 	// 参数检查
 	if config.ReportInterval <= 0 {config.ReportInterval = 30}
 	if config.ListenAddr == "" {return}
 
 	// 初始化监控对象
-	srmobj := systemResourceMonitor{cfg: config}
+	srmobj := systemResourceMonitor{cfg: srmconfig{
+		ListenAddr: config.ListenAddr,
+		ReportAddr: config.ReportAddr,
+		ReportInterval: config.ReportInterval,
+		Callback: callback,
+	}}
 
 	// 定时上报资源信息
 	go srmobj.report()
