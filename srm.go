@@ -6,34 +6,40 @@ import (
 	"time"
 )
 
+type SRMCallback func(*SystemInfo) interface{}
+
 type SRMConfig struct {
-	ListenAddr		string
-	ReportAddr		string
-	ReportInterval	int64
+	ListenAddr     string
+	ReportAddr     string
+	ReportInterval int64
 }
 
 type srmconfig struct {
-	ListenAddr		string
-	ReportAddr		string
-	Callback		func()interface{}
-	ReportInterval	int64
+	ListenAddr     string
+	ReportAddr     string
+	Callback       SRMCallback
+	ReportInterval int64
 }
 
 type systemResourceMonitor struct {
 	cfg srmconfig
 }
 
-func Run(config SRMConfig, callback func()interface{}) {
+func Run(config SRMConfig, callback SRMCallback) {
 	// 参数检查
-	if config.ReportInterval <= 0 {config.ReportInterval = 30}
-	if config.ListenAddr == "" {return}
+	if config.ReportInterval <= 0 {
+		config.ReportInterval = 30
+	}
+	if config.ListenAddr == "" {
+		return
+	}
 
 	// 初始化监控对象
 	srmobj := systemResourceMonitor{cfg: srmconfig{
-		ListenAddr: config.ListenAddr,
-		ReportAddr: config.ReportAddr,
+		ListenAddr:     config.ListenAddr,
+		ReportAddr:     config.ReportAddr,
 		ReportInterval: config.ReportInterval,
-		Callback: callback,
+		Callback:       callback,
 	}}
 
 	// 定时上报资源信息
@@ -47,13 +53,15 @@ func Run(config SRMConfig, callback func()interface{}) {
 	http.ListenAndServe(config.ListenAddr, &mux)
 }
 
-func (s *systemResourceMonitor)info(w http.ResponseWriter, r *http.Request) {
+func (s *systemResourceMonitor) info(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(update(s.cfg.Callback).tostring()))
 }
 
-func (s *systemResourceMonitor)report() {
+func (s *systemResourceMonitor) report() {
 	// 参数检查
-	if s.cfg.ReportAddr == "" {return}
+	if s.cfg.ReportAddr == "" {
+		return
+	}
 
 	// 上报资源信息
 	doreport := func(data string) {
@@ -62,5 +70,7 @@ func (s *systemResourceMonitor)report() {
 	}
 
 	// 循环执行
-	for {doreport(update(s.cfg.Callback).tostring())}
+	for {
+		doreport(update(s.cfg.Callback).tostring())
+	}
 }
