@@ -6,7 +6,6 @@ system resource monitor
 type SRMConfig struct {
 	ListenAddr		string              // 监听地址，被动查询当前系统资源占用信息
 	ReportAddr		string              // 主动上报地址
-	Callback		func()interface{}   // 回调函数，添加自定义的数据到系统信息中
 	ReportInterval	int64               // 主动上报时间间隔，单位秒
 }
 ```
@@ -47,10 +46,13 @@ GET http://xxx.xxx.xxx.xxx/info
 
 # 调用示例
 ```
-srm.Run(srm.SRMConfig{
-	ListenAddr: ":10008",
-	ReportAddr: "http://192.168.9.43:20008/test",
-	ReportInterval: 10,
-	Callback: callback,
-})
+srmobj := srm.NewSystemResourceMonitor(srm.SRMConfig{
+			ListenAddr: ":10008",
+			ReportAddr: "http://192.168.9.43:20008/test",
+			ReportInterval: 10,
+		})
+
+srmobj.OnCollectInfo = nil
+srmobj.OnReportResult = nil
+srmobj.Run()
 ```
