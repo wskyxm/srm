@@ -16,7 +16,7 @@ type SystemInfo struct {
 	Custom      interface{} `json:"custom"`
 }
 
-func update(callback SRMCallback) *SystemInfo {
+func update(callback CollectInfoCallback) *SystemInfo {
 	// 获取内存和CPU信息
 	cpuinfo, _ := cpu.Percent(time.Millisecond*200, false)
 	meminfo, _ := mem.VirtualMemory()
@@ -29,11 +29,7 @@ func update(callback SRMCallback) *SystemInfo {
 	sysinfo.CpuUsage = int64(cpuinfo[0])
 
 	// 调用回调函数
-	if callback != nil {
-		sysinfo.Custom = callback(sysinfo)
-	}
-
-	// 返回结果
+	if callback != nil {callback(sysinfo)}
 	return sysinfo
 }
 

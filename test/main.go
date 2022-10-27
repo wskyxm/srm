@@ -27,11 +27,14 @@ func main() {
 
 	go func() {
 		time.Sleep(time.Second * 3)
-		srm.Run(srm.SRMConfig{
-			ListenAddr:     ":10008",
-			ReportAddr:     "http://192.168.9.43:20008/test",
+
+		srmobj := srm.NewSystemResourceMonitor(srm.SRMConfig{
+			ListenAddr: ":10008",
+			ReportAddr: "http://192.168.9.43:20008/test",
 			ReportInterval: 10,
-		}, callback)
+		})
+
+		srmobj.Run()
 	}()
 
 	mux := http.ServeMux{}

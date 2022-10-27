@@ -1,12 +1,14 @@
 package srm
 
 import (
+	"io"
 	"net/http"
 	"strings"
 	"time"
 )
 
-type SRMCallback func(*SystemInfo) interface{}
+type CollectInfoCallback func(*SystemInfo)
+type ReportResultCallback func([]byte, error)
 
 type SRMConfig struct {
 	ListenAddr     string
@@ -14,63 +16,55 @@ type SRMConfig struct {
 	ReportInterval int64
 }
 
-type srmconfig struct {
-	ListenAddr     string
-	ReportAddr     string
-	Callback       SRMCallback
-	ReportInterval int64
+type SystemResourceMonitor struct {
+	config         SRMConfig
+	OnCollectInfo  CollectInfoCallback
+	OnReportResult ReportResultCallback
 }
 
-type systemResourceMonitor struct {
-	cfg srmconfig
+func NewSystemResourceMonitor(config SRMConfig) *SystemResourceMonitor {
+	return &SystemResourceMonitor{config: config}
 }
 
-func Run(config SRMConfig, callback SRMCallback) {
+func (s *SystemResourceMonitor)Run() {
 	// 参数检查
-	if config.ReportInterval <= 0 {
-		config.ReportInterval = 30
-	}
-	if config.ListenAddr == "" {
-		return
-	}
-
-	// 初始化监控对象
-	srmobj := systemResourceMonitor{cfg: srmconfig{
-		ListenAddr:     config.ListenAddr,
-		ReportAddr:     config.ReportAddr,
-		ReportInterval: config.ReportInterval,
-		Callback:       callback,
-	}}
+	if s.config.ReportInterval <= 0 {s.config.ReportInterval = 30}
+	if s.config.ListenAddr == "" {return}
 
 	// 定时上报资源信息
-	go srmobj.report()
+	go s.report()
 
 	// 初始化HTTP路由
 	mux := http.ServeMux{}
-	mux.HandleFunc("/info", srmobj.info)
+	mux.HandleFunc("/info", s.info)
 
 	// 启动HTTP服务
-	http.ListenAndServe(config.ListenAddr, &mux)
+	http.ListenAndServe(s.config.ListenAddr, &mux)
 }
 
-func (s *systemResourceMonitor) info(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(update(s.cfg.Callback).tostring()))
+func (s *SystemResourceMonitor)info(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(update(s.OnCollectInfo).tostring()))
 }
 
-func (s *systemResourceMonitor) report() {
+func (s *SystemResourceMonitor)report() {
 	// 参数检查
-	if s.cfg.ReportAddr == "" {
+	if s.config.ReportAddr == "" {
 		return
 	}
 
 	// 上报资源信息
 	doreport := func(data string) {
-		http.Post(s.cfg.ReportAddr, "application/json", strings.NewReader(data))
-		time.Sleep(time.Second * time.Duration(s.cfg.ReportInterval))
+		resp, err := http.Post(s.config.ReportAddr, "application/json", strings.NewReader(data))
+		if err != nil && s.OnReportResult != nil {s.OnReportResult(nil, err)}
+
+		if err == nil && s.OnReportResult != nil {
+			s.OnReportResult(io.ReadAll(resp.Body))
+		}
+
+		if err == nil {resp.Body.Close()}
+		time.Sleep(time.Second * time.Duration(s.config.ReportInterval))
 	}
 
 	// 循环执行
-	for {
-		doreport(update(s.cfg.Callback).tostring())
-	}
+	for {doreport(update(s.OnCollectInfo).tostring())}
 }
