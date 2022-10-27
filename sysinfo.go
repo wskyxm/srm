@@ -24,7 +24,7 @@ func update(callback CollectInfoCallback) *SystemInfo {
 	// 获取系统资源占用情况
 	sysinfo := &SystemInfo{Timestamp: time.Now().Unix()}
 	sysinfo.TotalMemory = int64(meminfo.Total / 1024.0 / 1024.0)
-	sysinfo.FreeMemory = int64(meminfo.Free / 1024.0 / 1024.0)
+	sysinfo.FreeMemory = int64(meminfo.Available / 1024.0 / 1024.0)
 	sysinfo.MemUsage = 100 - int64(float64(sysinfo.FreeMemory)/float64(sysinfo.TotalMemory)*100.0)
 	sysinfo.CpuUsage = int64(cpuinfo[0])
 
